@@ -2,8 +2,19 @@ package ru.spbau.my_hashtable;
 
 import ru.spbau.my_hashtable.my_list.MyList;
 
+/**
+ * Реализация HashTable на списках, выполняющая каждую операцию за амортизированную константу.
+ *
+ * @author mikhail shavkunov
+ */
+
 public class HashTable {
     private MyList[] table;
+
+    /**
+     * Size -- количество элементов в таблице.
+     * Capacity -- количество списков.
+    */
     private int capacity, size;
 
     private int hasher(String s) {
@@ -30,17 +41,36 @@ public class HashTable {
         size = 0;
     }
 
+    /**
+     * Содержится ли элемент в таблице по ключу. O(1) амортизированно.
+     * @param key ключ проверяемого элемента
+     * @return true если элемент содержится, false иначе.
+     */
+
     public boolean contains(String key) {
         int index = hasher(key);
 
         return table[index].contains(key);
     }
 
+    /**
+     * Получить элемент по ключу. O(1) амортизированно.
+     * @param key ключ элемента, который хотим получить.
+     * @return null если такого объекта нет, иначе значение по ключу.
+     */
+
     public String get(String key) {
         int index = hasher(key);
 
         return table[index].get(key);
     }
+
+    /**
+     * Положить элемент в HashTable. O(1) амортизированно.
+     * @param key ключ нового элемента.
+     * @param value значение нового элемента
+     * @return null, если по такому ключу не было элемента, иначе предыдущий элемент.
+     */
 
     public String put(String key, String value) {
         int index = hasher(key);
@@ -53,6 +83,12 @@ public class HashTable {
 
         return result;
     }
+
+    /**
+     * Удаление элемента по ключу. О(1) амортизированно.
+     * @param key ключ удаляемого элемента
+     * @return null, если удаляемого элемента в таблице нет, иначе удалённое значение.
+     */
 
     public String remove(String key) {
         int index = hasher(key);
