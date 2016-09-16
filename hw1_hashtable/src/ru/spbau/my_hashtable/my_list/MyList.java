@@ -121,6 +121,10 @@ public class MyList {
      */
 
     public String delete(String key) {
+        if (!contains(key)) {
+            return null;
+        }
+
         if (head.key.equals(key)) {
             String result = head.value;
             head = head.next;
@@ -131,13 +135,9 @@ public class MyList {
         while(!curNode.next.key.equals(key))
             curNode = curNode.next;
 
-        if (curNode.next.key.equals(key)) {
-            String result = curNode.next.value;
-            curNode.next = curNode.next.next;
-            return result;
-        } else {
-            return null;
-        }
+        String result = curNode.next.value;
+        curNode.next = curNode.next.next;
+        return result;
     }
 
     public void printList() {
