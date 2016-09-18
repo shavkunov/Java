@@ -1,38 +1,88 @@
+package ru.spbau.shavkunov.hw2;
+
 import java.util.Arrays;
 import java.util.Vector;
 
 /**
- * Реализация класса Matrix.
+ * Реализация класса ru.spbau.shavkunov.hw2.Matrix.
  *
  * @author mikhail shavkunov
  */
 public class Matrix {
     /**
-     * Хранится как массив столбцов. Внутри содержит обход по спирали tour.
-     * Размер size и вспомогательные переменные x, y необходимые для обхода.
+     * Матрица хранится как список столбцов.
      */
     private Column[] data;
-    private Vector<Integer> tour;
-    private int size;
-    private int x;
-    private int y;
 
-    private class Column implements Comparable<Column>{
-        int[] data;
+    /**
+     * Переменная хранящая обход матрица по спирали.
+     */
+    private Vector<Integer> tour;
+
+    /**
+     * Размер квадратной матрицы.
+     */
+    private int size;
+
+    /**
+     * Индекс элемента в матрице.
+     */
+    private class Index {
+        /**
+         * Строчка матрицы, где расположен элемент.
+         */
+        private int x;
+
+        /**
+         * Столбец матрицы, где расположен элемент.
+         */
+        private int y;
+
+        public Index(int row, int column) {
+            x = row;
+            y = column;
+        }
+
+        public void setRow(int newValue) {
+            x = newValue;
+        }
+
+        public int getRow() {
+            return x;
+        }
+
+        public int getElement() {
+            return data[x].get(y);
+        }
+
+        public int getColumn() {
+            return y;
+        }
+
+        public void setColumn(int newValue) {
+            y = newValue;
+        }
+    }
+
+    private class Column implements Comparable<Column> {
+        /**
+         * Столбец матрицы
+         */
+        private int[] data;
 
         public Column(int size) {
             data = new int[size];
         }
 
-        public int get(int x) {
-            return data[x];
+        public int get(int index) {
+            return data[index];
         }
 
-        public void set(int x, int y) {
-            data[x] = y;
+        public void set(int index, int value) {
+            data[index] = value;
         }
 
-        public int compareTo (Column col) {
+        public int compareTo(Column col) {
             if (data[0] <= col.get(0)) {
                 return -1;
             } else {
@@ -83,7 +133,7 @@ public class Matrix {
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                data[j].set(i, j*size + i);
+                data[j].set(i, j * size + i);
             }
         }
     }
@@ -144,15 +194,15 @@ public class Matrix {
      * @param length сколько раз смещаться
      * @return true если дошли до левого верхнего угла матрицы, false иначе
      */
-    private boolean straightWalk(int dx, int dy, int length) {
+    private boolean straightWalk(Index ind, int dx, int dy, int length) {
         for (int i = 0; i < length; i++) {
-            if (x == y && x == 0) {
+            if (ind.getRow() == ind.getColumn() && ind.getRow() == 0) {
                 return true;
             }
 
-            tour.add(data[x + dx].get(y + dy));
-            x += dx;
-            y += dy;
+            ind.setRow(ind.getRow() + dx);
+            ind.setColumn(ind.getColumn() + dy);
+            tour.add(ind.getElement());
         }
 
         return false;
@@ -162,13 +212,22 @@ public class Matrix {
      * Обход матрицы по спирали начиная с центра.
      * @return возвращает набор элементов матрицы в порядке обхода.
      */
-    public Vector<Integer> spiralPrint() {
-        x = y = size / 2;
+    public Vector<Integer> spiralTour() {
+        Index ind = new Index(size / 2, size / 2);
         tour = new Vector<Integer>();
 
-        tour.add(data[x].get(y));
-        int dy, dx;
+        tour.add(ind.getElement());
         for (int length = 1; length <= size; length++) {
+            /**
+             * Смещение по координате столбца.
+             */
+            int dy;
+
+            /**
+             * Смещение по координате строки.
+             */
+            int dx;
+
             if (length % 2 == 1) {
                 dy = -1;
                 dx = 1;
@@ -177,11 +236,11 @@ public class Matrix {
                 dx = -1;
             }
 
-            if (straightWalk(0, dy, length)) {
+            if (straightWalk(ind, 0, dy, length)) {
                 break;
             }
 
-            straightWalk(dx, 0, length);
+            straightWalk(ind, dx, 0, length);
         }
 
         return tour;
