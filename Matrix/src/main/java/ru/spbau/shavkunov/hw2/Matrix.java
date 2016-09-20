@@ -5,6 +5,7 @@ import java.util.Vector;
 
 /**
  * Реализация класса ru.spbau.shavkunov.hw2.Matrix.
+ * Класс умеет сортировать столбцы по возрастанию первых элементов и делать обход по спирали, начиная из центра.
  *
  * @author mikhail shavkunov
  */
@@ -13,16 +14,6 @@ public class Matrix {
      * Матрица хранится как список столбцов.
      */
     private Column[] data;
-
-    /**
-     * Переменная хранящая обход матрица по спирали.
-     */
-    private Vector<Integer> tour;
-
-    /**
-     * Размер квадратной матрицы.
-     */
-    private int size;
 
     /**
      * Индекс элемента в матрице.
@@ -93,8 +84,8 @@ public class Matrix {
     }
 
     private void set(int[][] inputData) {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data.length; j++) {
                 data[j].set(i, inputData[i][j]);
             }
         }
@@ -122,18 +113,18 @@ public class Matrix {
      * @return размер квадратной матрицы.
      */
     public int size() {
-        return this.size;
+        return data.length;
     }
 
-    private void init() {
+    private void init(int size) {
         data = new Column[size];
-        for (int i = 0; i < size; i++) {
-            data[i] = new Column(size);
+        for (int i = 0; i < data.length; i++) {
+            data[i] = new Column(data.length);
         }
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                data[j].set(i, j * size + i);
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data.length; j++) {
+                data[j].set(i, j * data.length + i);
             }
         }
     }
@@ -142,8 +133,7 @@ public class Matrix {
      * Конструктор по умолчанию создаст матрицу 3*3 с некоторым ее заполнением.
      */
     public Matrix() {
-        size = 3;
-        init();
+        init(3);
     }
 
     /**
@@ -151,8 +141,7 @@ public class Matrix {
      * @param inputSize размер создаваемой матрицы.
      */
     public Matrix(int inputSize) {
-        size = inputSize;
-        init();
+        init(inputSize);
     }
 
     /**
@@ -160,8 +149,7 @@ public class Matrix {
      * @param inputData основа матрицы.
      */
     public Matrix(int[][] inputData) {
-        size = inputData.length;
-        init();
+        init(inputData.length);
         this.set(inputData);
     }
 
@@ -169,8 +157,8 @@ public class Matrix {
      * Вывод всех элементов матрицы в естесственном порядке.
      */
     public void print() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data.length; j++) {
                 System.out.print(data[j].get(i) + " ");
             }
             System.out.println();
@@ -181,7 +169,7 @@ public class Matrix {
      * @param x вывод столбца x.
      */
     public void printColumn(int x) {
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < data.length; i++) {
             System.out.println(data[x].get(i));
         }
     }
@@ -194,7 +182,7 @@ public class Matrix {
      * @param length сколько раз смещаться
      * @return true если дошли до левого верхнего угла матрицы, false иначе
      */
-    private boolean straightWalk(Index ind, int dx, int dy, int length) {
+    private boolean straightWalk(Vector<Integer> tour, Index ind, int dx, int dy, int length) {
         for (int i = 0; i < length; i++) {
             if (ind.getRow() == ind.getColumn() && ind.getRow() == 0) {
                 return true;
@@ -213,11 +201,11 @@ public class Matrix {
      * @return возвращает набор элементов матрицы в порядке обхода.
      */
     public Vector<Integer> spiralTour() {
-        Index ind = new Index(size / 2, size / 2);
-        tour = new Vector<Integer>();
+        Index ind = new Index(data.length / 2, data.length / 2);
+        Vector<Integer> tour = new Vector<Integer>();
 
         tour.add(ind.getElement());
-        for (int length = 1; length <= size; length++) {
+        for (int length = 1; length <= data.length; length++) {
             /**
              * Смещение по координате столбца.
              */
@@ -236,11 +224,11 @@ public class Matrix {
                 dx = -1;
             }
 
-            if (straightWalk(ind, 0, dy, length)) {
+            if (straightWalk(tour, ind, 0, dy, length)) {
                 break;
             }
 
-            straightWalk(ind, dx, 0, length);
+            straightWalk(tour, ind, dx, 0, length);
         }
 
         return tour;
@@ -254,12 +242,12 @@ public class Matrix {
     public boolean equals(Object in) {
         Matrix input = (Matrix) in;
 
-        if (size != input.size()) {
+        if (data.length != input.size()) {
             return false;
         }
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data.length; j++) {
                 if (this.get(i, j) != input.get(i, j)) {
                     return false;
                 }
