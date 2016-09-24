@@ -101,20 +101,23 @@ public class Trie implements StreamSerializable {
      * Добавление строки в бор. O(length).
      * @return true, если строки такой еще не было в боре, иначе false.
      */
-    public boolean add(String s) {
+    public boolean add(String s) throws IOException {
+        for (int i = 0; i < s.length(); i++) {
+            if (!(s.charAt(i) >= 'a' && s.charAt(i) <= 'z')) {
+                throw new IOException("Invalid string!");
+            }
+        }
+
         if (contains(s)) {
             return false;
         }
-
         Node curNode = root;
         for (int i = 0; i < s.length() - 1; i++) {
             char curSymbol = s.charAt(i);
             curNode.size++;
-
             if (curNode.getNext(curSymbol) == null) {
                 curNode.setNext(curSymbol, false);
             }
-
             curNode = curNode.getNext(curSymbol);
         }
 
@@ -150,7 +153,6 @@ public class Trie implements StreamSerializable {
                 return null;
             }
         }
-
         return curNode;
     }
 
@@ -174,9 +176,7 @@ public class Trie implements StreamSerializable {
         if (!contains(s)){
             return false;
         }
-
         Node lastNode = walkDown(s, -1);
-
         lastNode.setTerminal(false);
         return true;
     }
@@ -193,7 +193,6 @@ public class Trie implements StreamSerializable {
      */
     public int howManyStartsWithPrefix(String prefix) {
         Node lastNode = walkDown(prefix, 0);
-
         if (lastNode == null) {
             return 0;
         } else {
