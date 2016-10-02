@@ -3,10 +3,7 @@ package ru.spbau.hw3.shavkunov;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 
 import static org.junit.Assert.*;
 
@@ -61,23 +58,11 @@ public class TrieTest {
         t.add("correspondent");
         t.add("corra");
 
-        try (FileOutputStream out = new FileOutputStream("file.txt")) {
-            //DataOutputStream dataOut = new DataOutputStream(out);
-            //t.serialize(dataOut);
-            t.serialize(out);
-        } catch (Exception e) {
-            System.out.print(e.getMessage());
-        }
-
+        FileOutputStream out = new FileOutputStream("file.txt");
+        t.serialize(out);
         Trie deserializedTrie = new Trie();
-        try (FileInputStream in = new FileInputStream("file.txt")) {
-            //DataInputStream dataIn = new DataInputStream(in);
-            //deserializedTrie.deserialize(dataIn);
-
-            deserializedTrie.deserialize(in);
-        } catch (Exception e) {
-            System.out.print(e.getMessage());
-        }
+        FileInputStream in = new FileInputStream("file.txt");
+        deserializedTrie.deserialize(in);
 
         assertEquals(7, deserializedTrie.size());
         assertTrue(deserializedTrie.contains("abcd"));
@@ -87,6 +72,9 @@ public class TrieTest {
         assertTrue(deserializedTrie.contains("corrupt"));
         assertTrue(deserializedTrie.contains("corra"));
         assertTrue(deserializedTrie.contains("corruption"));
+
+        File f = new File("file.txt");
+        f.delete();
     }
 
     @Test

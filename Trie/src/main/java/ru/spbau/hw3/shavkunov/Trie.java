@@ -1,11 +1,11 @@
 package ru.spbau.hw3.shavkunov;
 
 import java.io.*;
+import java.util.AbstractCollection;
 
 /**
  * Реализация бора. Для простоты реализации бор работает только на латинском алфавите с маленькими буквами.
  */
-
 public class Trie implements StreamSerializable {
     /**
      * Корень бора.
@@ -22,6 +22,11 @@ public class Trie implements StreamSerializable {
         private Node[] next;
 
         /**
+         * Отец вершины.
+         */
+        private Node parent;
+
+        /**
          * Размер поддерева. Т.е. количество терминальных вершин в текущем поддереве.
          */
         private int size;
@@ -31,8 +36,9 @@ public class Trie implements StreamSerializable {
          */
         public boolean isTerminal;
 
-        public Node(boolean isEnd) {
+        public Node(boolean isEnd, Node parent) {
             next = new Node[ALPHABET_SIZE];
+            this.parent = parent;
             isTerminal = isEnd;
             if (isEnd) {
                 size = 1;
@@ -55,7 +61,7 @@ public class Trie implements StreamSerializable {
          */
         public void setNext(char symbol, boolean isEnd) {
             int index = getIndex(symbol);
-            next[index] = new Node(isEnd);
+            next[index] = new Node(isEnd, this);
         }
 
         /**
@@ -68,6 +74,17 @@ public class Trie implements StreamSerializable {
         }
 
         /**
+         * Удаление всех поддеревьев имеющих нулевой размер, для удаления строки из бора.
+         */
+        public void deleteSons() {
+            for (int i = 0; i < ALPHABET_SIZE; i++) {
+                if (next[i] != null && next[i].size == 0) {
+                    next[i] = null;
+                }
+            }
+        }
+
+        /**
          * Задание вершине ее терминальности. Необходимо только для того, чтобы снять метку при удалении.
          * @param flag true, чтобы вершина стала терминальной, иначе false.
          */
@@ -77,6 +94,7 @@ public class Trie implements StreamSerializable {
 
         private void writeObject(java.io.ObjectOutputStream stream) throws IOException, ClassNotFoundException {
             stream.writeInt(size);
+            //stream.writeObject(parent);
             stream.writeBoolean(isTerminal);
             for (int i = 0; i < ALPHABET_SIZE; i++) {
                 stream.writeObject(next[i]);
@@ -86,6 +104,7 @@ public class Trie implements StreamSerializable {
         private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
             size = stream.readInt();
             isTerminal = stream.readBoolean();
+            //parent = (Node)stream.readObject();
             next = new Node[ALPHABET_SIZE];
             for (int i = 0; i < ALPHABET_SIZE; i++) {
                 next[i] = (Node) stream.readObject();
@@ -94,17 +113,17 @@ public class Trie implements StreamSerializable {
     }
 
     public Trie() {
-        root = new Node(false);
+        root = new Node(false, null);
     }
 
     /**
      * Добавление строки в бор. O(length).
      * @return true, если строки такой еще не было в боре, иначе false.
      */
-    public boolean add(String s) throws IOException {
+    public boolean add(String s) throws IllegalArgumentException {
         for (int i = 0; i < s.length(); i++) {
             if (!(s.charAt(i) >= 'a' && s.charAt(i) <= 'z')) {
-                throw new IOException("Invalid string!");
+                throw new IllegalArgumentException("Invalid string!");
             }
         }
 
@@ -133,10 +152,9 @@ public class Trie implements StreamSerializable {
     }
 
     /**
-     * /**
      * Максимальный спуск вниз по строке s.
      * @param s Строка, по которой будет произведен спуск вниз.
-     * @param sizeShift По пути можно менять размер вершин бора. Нужно удобного удаления строки.
+     * @param sizeShift По пути можно менять размер вершин бора. С помощью этого происходит удаление строки из бора.
      *                  Если передать -1, будет уменьшение размера всех вершин на пути на 1.
      * @return Возвращается вершина, которая соответствует максимальному присутствующему в боре префиксу строки s.
      * Null, если строки нет в боре.
@@ -162,10 +180,7 @@ public class Trie implements StreamSerializable {
      */
     public boolean contains(String s) {
         Node lastNode = walkDown(s, 0);
-        if (lastNode == null || !lastNode.isTerminal) {
-            return false;
-        }
-        return true;
+        return lastNode != null && lastNode.isTerminal;
     }
 
     /**
@@ -178,18 +193,23 @@ public class Trie implements StreamSerializable {
         }
         Node lastNode = walkDown(s, -1);
         lastNode.setTerminal(false);
+
+        while (lastNode.size == 0 & lastNode.parent != null) {
+            lastNode = lastNode.parent;
+        }
+        lastNode.deleteSons();
         return true;
     }
 
     /**
-     * @return Возвращает количество строк в боре.
+     * Возвращает количество строк в боре.
      */
     public int size() {
         return root.size;
     }
 
     /**
-     * @return Возвращает количество строк, начинающихся с заданного префикса.
+     * Возвращает количество строк, начинающихся с заданного префикса.
      */
     public int howManyStartsWithPrefix(String prefix) {
         Node lastNode = walkDown(prefix, 0);
@@ -205,7 +225,7 @@ public class Trie implements StreamSerializable {
      * @param out Поток вывода.
      */
     public void serialize(OutputStream out) throws IOException {
-        try (ObjectOutputStream myOut = new ObjectOutputStream(out)){
+        try (ObjectOutputStream myOut = new ObjectOutputStream(out)) {
             myOut.writeObject(root);
             myOut.flush();
         } catch (IOException e) {
@@ -218,7 +238,7 @@ public class Trie implements StreamSerializable {
      * @param in Входной поток.
      */
     public void deserialize(InputStream in) throws IOException {
-        try (ObjectInputStream myIn = new ObjectInputStream(in)){
+        try (ObjectInputStream myIn = new ObjectInputStream(in)) {
             Node tmpNode =  (Node) myIn.readObject();
             this.root = tmpNode;
         } catch (ClassNotFoundException c){
