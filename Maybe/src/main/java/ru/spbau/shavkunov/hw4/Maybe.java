@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.function.Function;
 
+/**
+ * Реализация объекта Maybe, который может хранить, а может не хранить внутри себя объект типа Т.
+ */
 public class Maybe<T> {
     private T data;
 
@@ -34,24 +37,28 @@ public class Maybe<T> {
         return new Maybe();
     }
 
-    public T get() throws NotPresentException {
+    /**
+     * Возвращает данные, который хранит объект Maybe.
+     * @throws NotPresentException Исключение пробрасывается в случае отсутствия данных.
+     */
+    public T get() {
         if (!isPresent()) {
-            throw new NotPresentException("Not present");
+            throw new NotPresentException();
         }
 
         return data;
     }
 
     /**
-     * @return Возвращает, есть ли в Maybe данные, которые Maybe может хранить.
+     * Возвращает, есть ли в Maybe данные, которые Maybe может хранить.
      */
     public boolean isPresent() {
         return data != null;
     }
 
     /**
+     * Возвращает новый объект Maybe с типом, соответствующим возвращаемому значению функции mapper.
      * @param mapper функция на значении Maybe.
-     * @return Возвращает новый объект Maybe с типом, соответствующим возвращаемому значению функции mapper.
      */
     public <U> Maybe<U> map(Function<? super T, ? extends U> mapper) {
         if (isPresent()) {
@@ -62,38 +69,18 @@ public class Maybe<T> {
     }
 
     /**
-     * Чтение числа из строки. В строке может присутствовать число записанное в виде цифр.
-     * Допускается один минус, но с оговоркой, что после него идут цифры.
-     * Ведущие и последующие проблемы не учитываются.
+     * Чтение числа из строки.
      * @param s Откуда нужно прочитать число.
      * @return Возвращает объект Maybe с числом, если в строке записано число, иначе внутри Maybe будет храниться null.
      */
     public static Maybe<Integer> readNumber(String s) {
-        Integer res = 0;
-        Boolean negativeFlag = false;
         s = s.trim();
-
-        for (int i = 0; i < s.length(); i++) {
-            if (!negativeFlag && s.charAt(i) == '-') {
-                if (res != 0) {
-                    return Maybe.nothing();
-                }
-                negativeFlag = true;
-                continue;
-            }
-
-            if (Character.isDigit(s.charAt(i))) {
-                res = res * 10 + (int)s.charAt(i) - '0';
-            } else {
-                return Maybe.nothing();
-            }
+        try {
+            Integer res = Integer.parseInt(s);
+            return Maybe.just(res);
+        } catch (Exception e) {
+            return Maybe.<Integer>nothing();
         }
-
-        if (negativeFlag) {
-            return Maybe.just(-res);
-        }
-
-        return Maybe.just(res);
     }
 
     /**
@@ -102,18 +89,14 @@ public class Maybe<T> {
      * Если в i-ой строке файла было записано не число, то в i-ой ячейке ArrayList будет Maybe хранящий null, иначе
      * Maybe будет хранить то число, которое было на i-ой строке.
      */
-    public static ArrayList<Maybe<Integer>> readFile(InputStream in) {
+    public static ArrayList<Maybe<Integer>> readFile(InputStream in) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         ArrayList<Maybe<Integer>> list = new ArrayList<>();
-        try {
-            String line = reader.readLine();
-            while(line != null) {
-                Maybe<Integer> res = Maybe.readNumber(line);
-                list.add(res);
-                line = reader.readLine();
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        String line = reader.readLine();
+        while (line != null) {
+            Maybe<Integer> res = Maybe.readNumber(line);
+            list.add(res);
+            line = reader.readLine();
         }
         return list;
     }

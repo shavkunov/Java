@@ -1,13 +1,8 @@
 package ru.spbau.shavkunov.hw4;
 
+/**
+ * Создание исключения в случае отсутствия данных.
+ */
 public class NotPresentException extends RuntimeException {
-    private String message;
-
-    public NotPresentException(String message) {
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return message;
-    }
+    public NotPresentException() {}
 }

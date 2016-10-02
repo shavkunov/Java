@@ -20,7 +20,8 @@ public class MaybeTest {
     public void mapTest() throws Exception {
         Maybe<Integer> a = Maybe.just(5);
         Function<Integer, Double> f = x -> (x * 1.0) / 3.0;
-        //System.out.println(a.map(f).get());
+        Double result = 5.0/3.0;
+        assertEquals(result, a.map(f).get());
     }
 
     @Test
@@ -42,7 +43,7 @@ public class MaybeTest {
         out.println("3341number");
         out.println("0");
         out.println("-128");
-        out.println("       234");
+        out.println("       234  ");
         out.println("5123Maybe");
         out.close();
 
@@ -58,7 +59,7 @@ public class MaybeTest {
         assertFalse(res.get(6).isPresent());
 
         File f = new File("test.txt");
-        f.delete();// нехорошо, но я ведь знаю, что создал файл
+        f.delete();
     }
 
     @Test
@@ -96,7 +97,7 @@ public class MaybeTest {
                 assertNull(line2);
                 break;
             }
-            assertTrue(line2 != null);
+            assertNotNull(line2);
 
             Maybe<Integer> fromInput = Maybe.readNumber(line1);
             Maybe<Integer> fromOutput = Maybe.readNumber(line2);
