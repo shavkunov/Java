@@ -94,7 +94,7 @@ public class Trie implements StreamSerializable {
 
         private void writeObject(java.io.ObjectOutputStream stream) throws IOException, ClassNotFoundException {
             stream.writeInt(size);
-            //stream.writeObject(parent);
+            stream.writeObject(parent);
             stream.writeBoolean(isTerminal);
             for (int i = 0; i < ALPHABET_SIZE; i++) {
                 stream.writeObject(next[i]);
@@ -103,8 +103,8 @@ public class Trie implements StreamSerializable {
 
         private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
             size = stream.readInt();
+            parent = (Node) stream.readObject();
             isTerminal = stream.readBoolean();
-            //parent = (Node)stream.readObject();
             next = new Node[ALPHABET_SIZE];
             for (int i = 0; i < ALPHABET_SIZE; i++) {
                 next[i] = (Node) stream.readObject();
