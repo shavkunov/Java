@@ -13,7 +13,7 @@ public final class Collections {
      * @return Возращает список в порядке обхода итератора,
      * где каждый элемент это результат применения функции f к элементу коллекции.
      */
-    public static <A, B> ArrayList<B> map(Iterable<A> a, Function1<A, B> f) {
+    public static <A, B> ArrayList<B> map(Iterable<A> a, Function1<? super A, ? extends B> f) {
         Iterator it = a.iterator();
         ArrayList<B> resList = new ArrayList<B>();
 
@@ -29,7 +29,7 @@ public final class Collections {
      * Принимает коллекцию a и предикат f.
      * @return Возвращает список элементов коллекции, которые удолетворяют предикату f.
      */
-    public static <A> ArrayList<A> filter(Iterable<A> a, Predicate<A> f) {
+    public static <A> ArrayList<A> filter(Iterable<A> a, Predicate<? super A> f) {
         Iterator it = a.iterator();
         ArrayList<A> resList = new ArrayList<A>();
 
@@ -47,7 +47,7 @@ public final class Collections {
      * Принимает коллекцию a и предикат f.
      * @return В порядке обхода итератора возвращает список элементов до первого элемента, который не удолетворяет условию предиката.
      */
-    public static <A> ArrayList<A> takeWhile(Iterable<A> a, Predicate<A> f) {
+    public static <A> ArrayList<A> takeWhile(Iterable<A> a, Predicate<? super A> f) {
         Iterator it = a.iterator();
         ArrayList<A> resList = new ArrayList<A>();
 
@@ -66,7 +66,7 @@ public final class Collections {
     /**
      * Аналогично takeWhile, только список будет до первого элемента, который предикату удолетворяет.
      */
-    public static <A> ArrayList<A> takeUnless(Iterable<A> a, Predicate<A> f) {
+    public static <A> ArrayList<A> takeUnless(Iterable<A> a, Predicate<? super A> f) {
         Iterator it = a.iterator();
         ArrayList<A> resList = new ArrayList<A>();
 
@@ -89,7 +89,7 @@ public final class Collections {
      * @param start Начальное значение.
      * @return Возвращает результат свертки.
      */
-    public static <A, B> B foldl(Iterable<A> a, Function2<A, B, B> f, B start) {
+    public static <A, B> B foldl(Iterable<A> a, Function2<? super A, ? super B, ? extends B> f, B start) {
         Iterator it = a.iterator();
         B res = start;
 
@@ -108,7 +108,7 @@ public final class Collections {
      * @param start Начальное значение.
      * @return Возвращает результат свертки.
      */
-    public static <A, B> B foldr(Iterable<A> a, Function2<A, B, B> f, B start) {
+    public static <A, B> B foldr(Iterable<A> a, Function2<? super A, ? super B, ? extends B> f, B start) {
         Iterator it = a.iterator();
         ArrayList<A> list = new ArrayList<A>();
         B res = start;

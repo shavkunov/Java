@@ -15,7 +15,7 @@ public interface Function2<T, U, R> {
     /**
      * Композиция функции от двух переменных с функцией от одной переменной.
      */
-    default <E> Function2<T, U, E> compose(Function1<R, E> g) {
+    default <E> Function2<T, U, E> compose(Function1<? super R, E> g) {
         return (x, y) -> g.apply(apply(x, y));
     }
 
