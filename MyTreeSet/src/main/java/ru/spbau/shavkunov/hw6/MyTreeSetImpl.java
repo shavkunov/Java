@@ -1,5 +1,8 @@
 package ru.spbau.shavkunov.hw6;
 
+import com.sun.istack.internal.Nullable;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -36,7 +39,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     /**
      * Конструтор, который явно принимает компаратор, по которому сравнивать элементы.
      */
-    public MyTreeSetImpl(Comparator<E> cmp) {
+    public MyTreeSetImpl(@NotNull Comparator<E> cmp) {
         this();
         this.cmp = cmp;
     }
@@ -46,12 +49,12 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * @param root корень дерева, куда хотим добавить элемент data.
      * @return false, если элемент в дереве уже был, иначе true.
      */
-    private boolean addRecursive(Node root, E data) {
+    private boolean addRecursive(@NotNull Node root,@NotNull E data) {
         if (cmp.compare(root.data, data) == 0) {
             return false;
         }
 
-        if (cmp.compare(root.data, data) < 0) {
+        if (cmp.compare(root.data, data) >= 0) {
             if (root.left != null) {
                 return addRecursive(root.left, data);
             } else {
@@ -74,7 +77,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * Добавление элемента data в дерево.
      * @return false, если элемент в дереве уже был, иначе true.
      */
-    public boolean add(E data) {
+    public boolean add(@NotNull E data) {
         if (cmp == null) {
             cmp = (a, b) -> ((Comparable) a).compareTo(b);
         }
@@ -92,33 +95,37 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * Поиск элемента data в дереве.
      * @return возвращается Node с этим элементом, если он был в дереве, иначе возвратится Node с элементом lower(data).
      */
-    private Node findElement(E data) {
+    private @Nullable Node findElement(@NotNull E data) {
         Node res = root;
 
-        int compareRes = cmp.compare(root.data, data);
-        while (compareRes != 0 && res != null) {
+        if (root == null) {
+            return null;
+        }
+
+        int compareRes = cmp.compare(res.data, data);
+        while (compareRes != 0) {
             if (compareRes < 0) {
-                res = res.left;
-            } else {
                 res = res.right;
+            } else {
+                res = res.left;
             }
 
-            compareRes = cmp.compare(root.data, data);
+            if (res == null) {
+                break;
+            }
+            compareRes = cmp.compare(res.data, data);
         }
 
         return res;
     }
 
     /**
-     * Удаление элемента obj из дерева.
-     * @return false, если удаление не производилось(элемента нет в дереве или obj не типа E), иначе true.
+     * Содержится ли obj в дереве.
+     * @return true, если obj присутствует в дереве, иначе false.
      */
-    public boolean remove(Object obj) {
+    @Override
+    public boolean contains(@NotNull Object obj) {
         E data = (E) obj;
-
-        if (data == null) {
-            return false;
-        }
 
         Node dataStorage = findElement(data);
 
@@ -126,8 +133,37 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
             return false;
         }
 
+        return true;
+    }
+
+    /**
+     * Удаление элемента obj из дерева.
+     * @return false, если удаление не производилось(элемента нет в дереве или obj не типа E), иначе true.
+     */
+    @Override
+    public boolean remove(@NotNull Object obj) {
+        if (!contains(obj)) {
+            return false;
+        }
+
+        E data = (E) obj;
+        Node dataStorage = findElement(data);
+
+        if (dataStorage == root && root.left == root.right && root.left == null) {
+            root = null;
+            size = 0;
+            return true;
+        }
+
         if (dataStorage.left == null || dataStorage.right == null) {
             if (dataStorage.left == null) {
+                if (dataStorage == root) {
+                    root = dataStorage.right;
+                    root.parent = null;
+                    size--;
+                    return true;
+                }
+
                 if (dataStorage.parent.left == dataStorage) {
                     dataStorage.parent.left = dataStorage.right;
                 } else {
@@ -135,6 +171,13 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
                 }
                 dataStorage.right = null;
             } else {
+                if (dataStorage == root) {
+                    root = dataStorage.left;
+                    root.parent = null;
+                    size--;
+                    return true;
+                }
+
                 if (dataStorage.parent.left == dataStorage) {
                     dataStorage.parent.left = dataStorage.left;
                 } else {
@@ -143,6 +186,13 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
                 dataStorage.left = null;
             }
         } else  {
+            if (dataStorage == root) {
+                root = dataStorage.left;
+                root.parent = null;
+                size--;
+                return true;
+            }
+
             if (dataStorage.parent.right == dataStorage) {
                 dataStorage.parent.right = dataStorage.right;
             } else {
@@ -155,7 +205,9 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
             dataStorage.left = null;
         }
 
-        dataStorage.parent = null;
+        if (dataStorage != root) {
+            dataStorage.parent = null;
+        }
         size--;
         return true;
     }
@@ -219,14 +271,22 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     /**
      * @return возвращает наименьший элемент множества.
      */
-    public E first() {
+    public @Nullable E first() {
+        if (root == null) {
+            return null;
+        }
+
         return root.mostLeft().data;
     }
 
     /**
      * @return возвращает наибольший элемент множества.
      */
-    public E last() {
+    public @Nullable E last() {
+        if (root == null) {
+            return null;
+        }
+
         return root.mostRight().data;
     }
 
@@ -236,7 +296,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * @param data элемент, относительно которого ищем не превосходящий его.
      * @return возвращает искомый элемент.
      */
-    private E getLeastElement(BiFunction<E, E, Boolean> less, E data) {
+    private @Nullable E getLeastElement(@NotNull BiFunction<E, E, Boolean> less, @NotNull E data) {
         Node cur = root;
         E res = null;
 
@@ -255,7 +315,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     /**
      * Аналогично с getLeastElement, только сравнения < и <= заменяются на > и >= соответственно.
      */
-    private E getMostElement(BiFunction<E, E, Boolean> more, E data) {
+    private @Nullable E getMostElement(@NotNull BiFunction<E, E, Boolean> more, @NotNull E data) {
         Node cur = root;
         E res = null;
 
@@ -275,7 +335,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * Поиск максимального элемента, который строго меньше чем е.
      * @return возвращает искомый элемент.
      */
-    public E lower(E e) {
+    public @Nullable E lower(@NotNull E e) {
         BiFunction<E, E, Boolean> less = (e1, e2) -> cmp.compare(e1, e2) < 0;
         return getLeastElement(less, e);
     }
@@ -284,7 +344,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * Поиск максимального элемента, который нестрого меньше чем е.
      * @return возвращает искомый элемент.
      */
-    public E floor(E e) {
+    public @Nullable E floor(@NotNull E e) {
         BiFunction<E, E, Boolean> less = (e1, e2) -> cmp.compare(e1, e2) <= 0;
         return getLeastElement(less, e);
     }
@@ -293,8 +353,8 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * Поиск минимального элемента, который строго больше чем е.
      * @return возвращает искомый элемент.
      */
-    public E ceiling(E e) {
-        BiFunction<E, E, Boolean> more = (e1, e2) -> cmp.compare(e1, e2) > 0;
+    public @Nullable E ceiling(@NotNull E e) {
+        BiFunction<E, E, Boolean> more = (e1, e2) -> cmp.compare(e1, e2) >= 0;
         return getMostElement(more, e);
     }
 
@@ -302,8 +362,8 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
      * Поиск минимального элемента, который нестрого больше чем е.
      * @return возвращает искомый элемент.
      */
-    public E higher(E e) {
-        BiFunction<E, E, Boolean> more = (e1, e2) -> cmp.compare(e1, e2) >= 0;
+    public @Nullable E higher(@NotNull E e) {
+        BiFunction<E, E, Boolean> more = (e1, e2) -> cmp.compare(e1, e2) > 0;
         return getMostElement(more, e);
     }
 
@@ -324,32 +384,32 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         }
 
         @Override
-        public E first() {
+        public @Nullable E first() {
             return MyTreeSetImpl.this.last();
         }
 
         @Override
-        public E last() {
+        public @Nullable E last() {
             return MyTreeSetImpl.this.first();
         }
 
         @Override
-        public E lower(E e) {
+        public @Nullable E lower(@NotNull E e) {
             return MyTreeSetImpl.this.higher(e);
         }
 
         @Override
-        public E floor(E e) {
+        public @Nullable E floor(@NotNull E e) {
             return MyTreeSetImpl.this.ceiling(e);
         }
 
         @Override
-        public E ceiling(E e) {
+        public @Nullable E ceiling(@NotNull E e) {
             return MyTreeSetImpl.this.floor(e);
         }
 
         @Override
-        public E higher(E e) {
+        public @Nullable E higher(@NotNull E e) {
             return MyTreeSetImpl.this.lower(e);
         }
 
@@ -391,7 +451,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         /**
          * Конструктор без предка.
          */
-        public Node(E data) {
+        public Node(@NotNull E data) {
             left = null;
             right = null;
             parent = null;
@@ -401,7 +461,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         /**
          * Конструктор с указанием предка вершины.
          */
-        public Node(E data, Node parent) {
+        public Node(@NotNull E data, @NotNull Node parent) {
             this(data);
             this.parent = parent;
         }
@@ -410,7 +470,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
          * Поиск наиболее левой вершины, относительно текущей.
          * @return возвращает искомую вершину.
          */
-        public Node mostLeft() {
+        public @Nullable Node mostLeft() {
             Node res = this;
             while (res.left != null) {
                 res = res.left;
@@ -423,7 +483,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
          * Поиск наиболее правой вершины, относительно текущей.
          * @return возвращает искомую вершину.
          */
-        public Node mostRight() {
+        public @Nullable Node mostRight() {
             Node res = this;
             while (res.right != null) {
                 res = res.right;
@@ -435,7 +495,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         /**
          * @return возвращает вершину, следующую в порядке обхода дерева алгоритмом dfs.
          */
-        public Node next() {
+        public @Nullable Node next() {
             if (right != null) {
                 return right.mostLeft();
             }
@@ -444,6 +504,10 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
 
             while (res.parent.right == res) {
                 res = res.parent;
+
+                if (res.parent == null) {
+                    return null;
+                }
             }
 
             return res.parent;
@@ -452,15 +516,23 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         /**
          * @return аналогично next, только вершина будет предыдущей.
          */
-        public Node previous() {
+        public @Nullable Node previous() {
             if (left != null) {
                 return left.mostRight();
             }
 
             Node res = this;
 
+            if (res.parent == null) {
+                return null;
+            }
+
             while (res.parent.left == res) {
                 res = res.parent;
+
+                if (res.parent == null) {
+                    return null;
+                }
             }
 
             return res.parent;
@@ -469,14 +541,14 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         /**
          * Установить левым сыном конкретную вершину.
          */
-        public void setLeft(E data, Node parent) {
+        public void setLeft(@NotNull E data, @NotNull Node parent) {
             left = new Node(data, parent);
         }
 
         /**
          * Установить правым сыном конкретную вершину.
          */
-        public void setRight(E data, Node parent) {
+        public void setRight(@NotNull E data, @NotNull Node parent) {
             right = new Node(data, parent);
         }
     }
