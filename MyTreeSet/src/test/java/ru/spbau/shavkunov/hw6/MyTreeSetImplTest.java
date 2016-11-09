@@ -158,4 +158,15 @@ public class MyTreeSetImplTest {
         assertEquals(10, dt.ceiling(11).intValue());
         assertEquals(10, dt.floor(9).intValue());
     }
+
+    @Test(expected = RuntimeException.class)
+    public void iteratorInvalidationTest() throws Exception {
+        t.add(5);
+        t.add(20);
+        t.add(10);
+
+        Iterator<Integer> it = t.iterator();
+        t.add(100);
+        it.hasNext();
+    }
 }

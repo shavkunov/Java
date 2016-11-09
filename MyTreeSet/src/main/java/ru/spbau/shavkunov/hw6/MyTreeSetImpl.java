@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.function.BiFunction;
 
 /**
@@ -28,6 +29,11 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     private Comparator<E> cmp;
 
     /**
+     * Состояние дерева.
+     */
+    private long state = 0;
+
+    /**
      * Конструктор, подразумевающий, что тип Е, можно сравнивать.
      */
     public MyTreeSetImpl() {
@@ -42,6 +48,14 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     public MyTreeSetImpl(@NotNull Comparator<E> cmp) {
         this();
         this.cmp = cmp;
+    }
+
+    /**
+     * Генерация следующего состояния.
+     */
+    private long generateState() {
+        Random rand = new Random();
+        return rand.nextLong();
     }
 
     /**
@@ -60,6 +74,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
             } else {
                 root.setLeft(data, root);
                 size++;
+                state = generateState();
                 return true;
             }
         } else {
@@ -68,6 +83,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
             } else {
                 root.setRight(data, root);
                 size++;
+                state = generateState();
                 return true;
             }
         }
@@ -85,6 +101,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         if (root == null) {
             root = new Node(data);
             size++;
+            state = generateState();
             return true;
         }
 
@@ -152,6 +169,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         if (dataStorage == root && root.left == root.right && root.left == null) {
             root = null;
             size = 0;
+            state = generateState();
             return true;
         }
 
@@ -161,6 +179,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
                     root = dataStorage.right;
                     root.parent = null;
                     size--;
+                    state = generateState();
                     return true;
                 }
 
@@ -175,6 +194,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
                     root = dataStorage.left;
                     root.parent = null;
                     size--;
+                    state = generateState();
                     return true;
                 }
 
@@ -190,6 +210,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
                 root = dataStorage.left;
                 root.parent = null;
                 size--;
+                state = generateState();
                 return true;
             }
 
@@ -209,6 +230,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
             dataStorage.parent = null;
         }
         size--;
+        state = generateState();
         return true;
     }
 
@@ -225,14 +247,23 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     public Iterator<E> iterator() {
         return new Iterator<E>() {
             private Node root = MyTreeSetImpl.this.root.mostLeft();
+            private long state = MyTreeSetImpl.this.state;
 
             @Override
             public boolean hasNext() {
+                if (state != MyTreeSetImpl.this.state) {
+                    throw new RuntimeException();
+                }
+
                 return root != null;
             }
 
             @Override
             public E next() {
+                if (state != MyTreeSetImpl.this.state) {
+                    throw new RuntimeException();
+                }
+
                 E res = root.data;
                 root = root.next();
                 return res;
@@ -246,14 +277,23 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     public Iterator<E> descendingIterator() {
         return new Iterator<E>() {
             private Node root = MyTreeSetImpl.this.root.mostRight();
+            private long state = MyTreeSetImpl.this.state;
 
             @Override
             public boolean hasNext() {
+                if (state != MyTreeSetImpl.this.state) {
+                    throw new RuntimeException();
+                }
+
                 return root != null;
             }
 
             @Override
             public E next() {
+                if (state != MyTreeSetImpl.this.state) {
+                    throw new RuntimeException();
+                }
+
                 E res = root.data;
                 root = root.previous();
                 return res;

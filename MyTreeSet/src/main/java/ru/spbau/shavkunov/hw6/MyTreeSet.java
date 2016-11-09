@@ -8,7 +8,7 @@ public interface MyTreeSet<E> extends Set<E> {
     Iterator<E> descendingIterator();
 
     MyTreeSet<E> descendingSet();
-    
+
     E first();
 
     E last();
