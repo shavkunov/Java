@@ -1,7 +1,7 @@
 package ru.spbau.shavkunov.hw6;
 
-import com.sun.istack.internal.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.AbstractSet;
 import java.util.Comparator;
@@ -271,9 +271,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         };
     }
 
-    /**
-     * @return возвращает итератор обхода множества в обратном порядке.
-     */
+    /** {@link MyTreeSet#descendingIterator()} **/
     public Iterator<E> descendingIterator() {
         return new Iterator<E>() {
             private Node root = MyTreeSetImpl.this.root.mostRight();
@@ -301,16 +299,12 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         };
     }
 
-    /**
-     * @return возвращает структуру с обратными операциями. Т.е. прямой обход становится обратным, а lower становится higher и тд.
-     */
+    /** {@link MyTreeSet#descendingSet()} **/
     public MyTreeSet<E> descendingSet() {
         return new MyDescendingSet();
     }
 
-    /**
-     * @return возвращает наименьший элемент множества.
-     */
+    /** {@link MyTreeSet#first()} **/
     public @Nullable E first() {
         if (root == null) {
             return null;
@@ -319,9 +313,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         return root.mostLeft().data;
     }
 
-    /**
-     * @return возвращает наибольший элемент множества.
-     */
+    /** {@link MyTreeSet#last()} **/
     public @Nullable E last() {
         if (root == null) {
             return null;
@@ -371,37 +363,25 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         return res;
     }
 
-    /**
-     * Поиск максимального элемента, который строго меньше чем е.
-     * @return возвращает искомый элемент.
-     */
+    /** {@link MyTreeSet#lower(Object)} **/
     public @Nullable E lower(@NotNull E e) {
         BiFunction<E, E, Boolean> less = (e1, e2) -> cmp.compare(e1, e2) < 0;
         return getLeastElement(less, e);
     }
 
-    /**
-     * Поиск максимального элемента, который нестрого меньше чем е.
-     * @return возвращает искомый элемент.
-     */
+    /** {@link MyTreeSet#floor(Object)} **/
     public @Nullable E floor(@NotNull E e) {
         BiFunction<E, E, Boolean> less = (e1, e2) -> cmp.compare(e1, e2) <= 0;
         return getLeastElement(less, e);
     }
 
-    /**
-     * Поиск минимального элемента, который строго больше чем е.
-     * @return возвращает искомый элемент.
-     */
+    /** {@link MyTreeSet#ceiling(Object)} **/
     public @Nullable E ceiling(@NotNull E e) {
         BiFunction<E, E, Boolean> more = (e1, e2) -> cmp.compare(e1, e2) >= 0;
         return getMostElement(more, e);
     }
 
-    /**
-     * Поиск минимального элемента, который нестрого больше чем е.
-     * @return возвращает искомый элемент.
-     */
+    /** {@link MyTreeSet#higher(Object)} **/
     public @Nullable E higher(@NotNull E e) {
         BiFunction<E, E, Boolean> more = (e1, e2) -> cmp.compare(e1, e2) > 0;
         return getMostElement(more, e);
