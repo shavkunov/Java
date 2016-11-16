@@ -235,14 +235,14 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
     }
 
     /**
-     * @return возвращает количество элементов в множестве.
+     * возвращает количество элементов в множестве.
      */
     public int size() {
         return size;
     }
 
     /**
-     * @return возвращает итератор обхода множества в прямом порядке.
+     * возвращает итератор обхода множества в прямом порядке.
      */
     public Iterator<E> iterator() {
         return new Iterator<E>() {
@@ -513,7 +513,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         }
 
         /**
-         * @return возвращает вершину, следующую в порядке обхода дерева алгоритмом dfs.
+         * возвращает вершину, следующую в порядке обхода дерева алгоритмом dfs.
          */
         public @Nullable Node next() {
             if (right != null) {
@@ -534,7 +534,7 @@ public class MyTreeSetImpl<E> extends AbstractSet<E> implements MyTreeSet<E> {
         }
 
         /**
-         * @return аналогично next, только вершина будет предыдущей.
+         * аналогично next, только вершина будет предыдущей.
          */
         public @Nullable Node previous() {
             if (left != null) {
