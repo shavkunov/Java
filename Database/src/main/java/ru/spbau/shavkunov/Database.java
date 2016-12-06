@@ -16,8 +16,13 @@ public class Database {
     /**
      * Основная логика программы.
      */
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        initDatabase();
+    public static void main(String[] args) {
+        try {
+            initDatabase();
+        } catch (SQLException e) {
+            System.out.println("Произошла ошибки инициализации.");
+            e.printStackTrace();
+        }
 
         Scanner input = new Scanner(System.in);
         if (!input.hasNextInt()) {
@@ -40,18 +45,34 @@ public class Database {
                     long number = input.nextLong();
                     input.nextLine();
 
-                    addEntry(name, number);
+                    try {
+                        addEntry(name, number);
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка добавления");
+                        e.printStackTrace();
+                    }
                     break;
                 }
 
                 case 2: {
                     System.out.println("Введите имя для поиска");
                     String name = input.nextLine();
-                    ResultSet results = getNumbers(name);
+                    ResultSet results = null;
+                    try {
+                        results = getNumbers(name);
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка поиска по имени");
+                        e.printStackTrace();
+                    }
 
                     System.out.println("Ваши результаты:");
-                    while (results.next()) {
-                        System.out.println(results.getInt("number"));
+                    try {
+                        while (results.next()) {
+                            System.out.println(results.getInt("number"));
+                        }
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка вывода результатов поиска по имени");
+                        e.printStackTrace();
                     }
 
                     break;
@@ -61,11 +82,22 @@ public class Database {
                     System.out.println("Введите телефон для поиска");
                     long number = input.nextLong();
                     input.nextLine();
-                    ResultSet results = getNames(number);
+                    ResultSet results = null;
+                    try {
+                        results = getNames(number);
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка поиска по номеру");
+                        e.printStackTrace();
+                    }
 
                     System.out.println("Ваши результаты:");
-                    while (results.next()) {
-                        System.out.println(results.getString("name"));
+                    try {
+                        while (results.next()) {
+                            System.out.println(results.getString("name"));
+                        }
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка вывода результатов поиска по номеру");
+                        e.printStackTrace();
                     }
 
                     break;
@@ -76,7 +108,12 @@ public class Database {
                     String name = input.nextLine();
                     System.out.println("Введите номер телефона только цифрами");
                     long number = input.nextLong();
-                    deleteEntry(name, number);
+                    try {
+                        deleteEntry(name, number);
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка удаления записи.");
+                        e.printStackTrace();
+                    }
                     System.out.println("Запись " + name + " " + number + " удалена.");
 
                     break;
@@ -90,7 +127,12 @@ public class Database {
                     input.nextLine();
                     System.out.println("Введите новое имя пользователя телефоном");
                     String newName = input.nextLine();
-                    changeName(name, newName, number);
+                    try {
+                        changeName(name, newName, number);
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка изменения имени в записи");
+                        e.printStackTrace();
+                    }
 
                     break;
                 }
@@ -104,19 +146,22 @@ public class Database {
                     System.out.println("Введите новый номер телефона только цифрами");
                     long newNumber = input.nextLong();
                     input.nextLine();
-                    changeNumber(name, number, newNumber);
+                    try {
+                        changeNumber(name, number, newNumber);
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка изменения номера в записи");
+                        e.printStackTrace();
+                    }
 
                     break;
                 }
 
                 case 7: {
-                    String queryAllEntries = "SELECT Names.name, Numbers.number " +
-                                             "FROM Name_to_number INNER JOIN Names ON Names.ID = name_ID " +
-                                             "INNER JOIN Numbers ON Numbers.ID = number_ID";
-
-                    ResultSet results = stmt.executeQuery(queryAllEntries);
-                    while(results.next()) {
-                        System.out.println(results.getString("name") + " " + results.getLong("number"));
+                    try {
+                        printAllEntries();
+                    } catch (SQLException e) {
+                        System.out.println("Ошибка вывода всех записей");
+                        e.printStackTrace();
                     }
 
                     break;
@@ -127,9 +172,14 @@ public class Database {
             }
         }
 
-        stmt.close();
-        c.commit();
-        c.close();
+        try {
+            stmt.close();
+            c.commit();
+            c.close();
+        } catch (SQLException e) {
+            System.out.println("Ошибка закрытия сессии работы с БД");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -298,6 +348,17 @@ public class Database {
                                       "VALUES (" + nameIndex + ", " + numberIndex + ")";
             stmt.executeUpdate(queryAddRelation);
             System.out.println("Запись добавлена!");
+        }
+    }
+
+    private static void printAllEntries() throws SQLException {
+        String queryAllEntries = "SELECT Names.name, Numbers.number " +
+                                 "FROM Name_to_number INNER JOIN Names ON Names.ID = name_ID " +
+                                 "INNER JOIN Numbers ON Numbers.ID = number_ID";
+
+        ResultSet results = stmt.executeQuery(queryAllEntries);
+        while(results.next()) {
+            System.out.println(results.getString("name") + " " + results.getLong("number"));
         }
     }
 
