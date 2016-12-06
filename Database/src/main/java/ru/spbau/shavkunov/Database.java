@@ -73,7 +73,7 @@ public class Database {
 
                     System.out.println("Ваши результаты:");
                     try {
-                        while (results.next()) {
+                        while (results != null && results.next()) {
                             System.out.println(results.getInt("number"));
                         }
                     } catch (SQLException e) {
@@ -98,7 +98,7 @@ public class Database {
 
                     System.out.println("Ваши результаты:");
                     try {
-                        while (results.next()) {
+                        while (results != null && results.next()) {
                             System.out.println(results.getString("name"));
                         }
                     } catch (SQLException e) {
@@ -164,7 +164,10 @@ public class Database {
 
                 case 7: {
                     try {
-                        printAllEntries();
+                        ResultSet results = getAllEntries();
+                        while(results.next()) {
+                            System.out.println(results.getString("name") + " " + results.getLong("number"));
+                        }
                     } catch (SQLException e) {
                         System.out.println("Ошибка вывода всех записей");
                         e.printStackTrace();
@@ -181,13 +184,20 @@ public class Database {
         }
 
         try {
-            stmt.close();
-            c.commit();
-            c.close();
+            closeDatabase();
         } catch (SQLException e) {
             System.out.println("Ошибка закрытия сессии работы с БД");
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Закрытие БД. Сделано public для использовании в тесте.
+     */
+    public static void closeDatabase() throws SQLException {
+        stmt.close();
+        c.commit();
+        c.close();
     }
 
     /**
@@ -196,13 +206,13 @@ public class Database {
      * @param number старый телефонный номер.
      * @param newNumber новый телефонный номер.
      */
-    private static void changeNumber(String name, long number, long newNumber) throws SQLException {
+    public static void changeNumber(String name, long number, long newNumber) throws SQLException {
         Integer nameIndex = checkName(name);
         Integer numberIndex = checkNumber(number);
 
         String querуCountNamesOfNumber = "SELECT COUNT(*) AS total FROM Name_to_number WHERE number_ID = " + numberIndex;
         if (stmt.executeQuery(querуCountNamesOfNumber).getInt("total") == 1) {
-            String queryUpdateNumber = "UPDATE Number SET number = " + newNumber + " WHERE ID = " + numberIndex;
+            String queryUpdateNumber = "UPDATE Numbers SET number = " + newNumber + " WHERE ID = " + numberIndex;
             stmt.executeUpdate(queryUpdateNumber);
         } else {
             String queryInsertNewNumber = "INSERT INTO Numbers VALUES (" + newNumber + ")";
@@ -220,10 +230,9 @@ public class Database {
      * Изменение имени в паре имя - телефон.
      * @param name старое имя.
      * @param newName новое имя
-     * @param number телефонны номер.
-     * @throws SQLException
+     * @param number телефоный номер.
      */
-    private static void changeName(String name, String newName, long number) throws SQLException {
+    public static void changeName(String name, String newName, long number) throws SQLException {
         Integer nameIndex = checkName(name);
         Integer numberIndex = checkNumber(number);
 
@@ -246,7 +255,7 @@ public class Database {
     /**
      * Удаление записи имени и телефона из БД
      */
-    private static void deleteEntry(String name, long number) throws SQLException {
+    public static void deleteEntry(String name, long number) throws SQLException {
         Integer nameIndex = checkName(name);
         Integer numberIndex = checkNumber(number);
 
@@ -275,21 +284,37 @@ public class Database {
     /**
      * Получение курсора всех номеров по заданному имени.
      */
-    private static ResultSet getNumbers(String name) throws SQLException {
-        String queryFindNumbersByName = "SELECT number from Numbers WHERE ID = " +
-                                        "(SELECT number_ID FROM Name_to_number " +
-                                        "INNER JOIN Names ON name = '" + name + "')";
-        return stmt.executeQuery(queryFindNumbersByName);
+    public static @Nullable ResultSet getNumbers(String name) throws SQLException {
+        String queryFindIDByName = "SELECT ID FROM Names WHERE name = '" + name + "'";
+        ResultSet rs = stmt.executeQuery(queryFindIDByName);
+        if (!rs.next()) {
+            return null;
+        }
+
+        int id = rs.getInt("ID");
+
+        String queryFindNumbersByID = "SELECT number FROM Numbers INNER JOIN Name_to_number ON " +
+                                      "Name_to_number.number_ID = Numbers.ID " +
+                                      "WHERE Name_to_number.name_ID = " + id;
+        return stmt.executeQuery(queryFindNumbersByID);
     }
 
     /**
      * Получение курсора всех имен по заданному номеру.
      */
-    private static ResultSet getNames(long number) throws SQLException {
-        String queryFindNamesByNumber = "SELECT name from Names WHERE ID = " +
-                                        "(SELECT name_ID FROM Name_to_number " +
-                                        "INNER JOIN Numbers ON number = " + number + ")";
-        return stmt.executeQuery(queryFindNamesByNumber);
+    public static @Nullable ResultSet getNames(long number) throws SQLException {
+        String queryFindIDByNumber = "SELECT ID FROM Numbers WHERE number = " + number;
+        ResultSet rs = stmt.executeQuery(queryFindIDByNumber);
+        if (!rs.next()) {
+            return null;
+        }
+        int id = rs.getInt("ID");
+
+        String queryFindNamesByID = "SELECT name FROM Names INNER JOIN Name_to_number ON " +
+                                    "Name_to_number.name_ID = Names.ID " +
+                                    "WHERE Name_to_number.number_ID = " + id;
+
+        return stmt.executeQuery(queryFindNamesByID);
     }
 
     /**
@@ -327,7 +352,7 @@ public class Database {
     /**
      * Добавление в БД пары имени и телефона.
      */
-    private static void addEntry(String name, long number) throws SQLException {
+    public static void addEntry(String name, long number) throws SQLException {
         Integer nameIndex = checkName(name);
         if (nameIndex == null) {
             String queryAddName = "INSERT INTO Names(name) VALUES ('" + name + "')";
@@ -355,19 +380,15 @@ public class Database {
             String queryAddRelation = "INSERT INTO Name_to_number(name_ID, number_ID) " +
                                       "VALUES (" + nameIndex + ", " + numberIndex + ")";
             stmt.executeUpdate(queryAddRelation);
-            System.out.println("Запись добавлена!");
         }
     }
 
-    private static void printAllEntries() throws SQLException {
+    public static ResultSet getAllEntries() throws SQLException {
         String queryAllEntries = "SELECT Names.name, Numbers.number " +
                                  "FROM Name_to_number INNER JOIN Names ON Names.ID = name_ID " +
                                  "INNER JOIN Numbers ON Numbers.ID = number_ID";
 
-        ResultSet results = stmt.executeQuery(queryAllEntries);
-        while(results.next()) {
-            System.out.println(results.getString("name") + " " + results.getLong("number"));
-        }
+       return stmt.executeQuery(queryAllEntries);
     }
 
     private static void printMenu() {
@@ -391,7 +412,7 @@ public class Database {
     /**
      * Инициализация БД. Создание трех пустых таблиц. Название БД - content.db.
      */
-    private static void initDatabase() throws SQLException {
+    public static void initDatabase() throws SQLException {
         File db = new File("content.db");
         if (db.exists()) {
             db.delete();
