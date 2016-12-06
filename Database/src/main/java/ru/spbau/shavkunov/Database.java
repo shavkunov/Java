@@ -24,17 +24,23 @@ public class Database {
             e.printStackTrace();
         }
 
+        printMenu();
         Scanner input = new Scanner(System.in);
         if (!input.hasNextInt()) {
             System.out.println("Введено не целое число!");
         }
 
-        int cmd = -1;
-        while (cmd != 0) {
-            cmd = input.nextInt();
-            input.nextLine();
+        String line = "Not valid command";
+        while (!line.equals("0")) {
+            line = input.nextLine();
+            int command = 0;
+            try {
+                command = Integer.parseInt(line);
+            } catch (Exception e) {
+                printUsage();
+            }
 
-            switch (cmd) {
+            switch (command) {
                 case 0:
                     break;
 
@@ -167,8 +173,10 @@ public class Database {
                     break;
                 }
 
-                default:
+                default: {
+                    printUsage();
                     break;
+                }
             }
         }
 
@@ -360,6 +368,24 @@ public class Database {
         while(results.next()) {
             System.out.println(results.getString("name") + " " + results.getLong("number"));
         }
+    }
+
+    private static void printMenu() {
+        String menu = "0 - выйти\n" +
+                      "1 - добавить запись (имя и телефон)\n" +
+                      "2 - найти телефоны по имени\n" +
+                      "3 - найти имена по телефону\n" +
+                      "4 - удалить заданную пару имя-телефон\n" +
+                      "5 - у указанной пары \"имя-телефон\" поменять имя\n" +
+                      "6 - у указанной пары \"имя-телефон\" поменять телефон\n" +
+                      "7 - распечатать все пары имя-телефон в справочнике";
+
+        System.out.println(menu);
+    }
+
+    private static void printUsage() {
+        System.out.println("Некорректный ввод. Воспользуйтесь меню: ");
+        printMenu();
     }
 
     /**
